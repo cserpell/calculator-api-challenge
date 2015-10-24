@@ -22,12 +22,14 @@ class CalculatorHandler(tornado.web.RequestHandler):
         @param message: string message for logging
         """
         logging.error('Error - %s', message)
+        self.set_header('Content-Type', 'application/json')
         self.write('null')
 
-    def _end(self):
+    def _end(self, result):
         """Writes an error response."""
         logging.error('Error')
-        self.write('null')
+        self.set_header('Content-Type', 'application/json')
+        self.write({'result': result})
 
     @staticmethod
     def apply_op(oop, ops):
@@ -74,8 +76,7 @@ class CalculatorHandler(tornado.web.RequestHandler):
         except (ValueError, ZeroDivisionError) as exc:
             self._error(str(exc))
             return
-        self.set_header('Content-Type', 'application/json')
-        self.write({'result': str(value)})
+        self._end(str(value))
 
 
 def make_app(debug):
