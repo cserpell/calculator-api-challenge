@@ -17,6 +17,11 @@ class CalculatorHandler(tornado.web.RequestHandler):
         """Returns a hello world string."""
         self.write('Hello, world')
 
+    def data_received(self, chunk):
+        """Do nothing.
+        @param chunk: streamed request data to process
+        """
+
     def _error(self, message):
         """Writes an error response.
         @param message: string message for logging
@@ -27,7 +32,7 @@ class CalculatorHandler(tornado.web.RequestHandler):
 
     def _end(self, result):
         """Writes an error response."""
-        logging.error('Error')
+        logging.info('Answering with %s', result)
         self.set_header('Content-Type', 'application/json')
         self.write({'result': result})
 
@@ -83,6 +88,7 @@ def make_app(debug):
     """Builds tornado application to run in the server.
     @param debug: boolean, if True, add debug option to application
     """
+    logging.info('Starting server')
     tornado.log.enable_pretty_logging()
     return tornado.web.Application([(r'/', CalculatorHandler)], debug=debug)
 
