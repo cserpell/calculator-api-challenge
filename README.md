@@ -14,6 +14,3 @@ Está ideado para correr como una imagen [docker](http://www.docker.com). Para c
 Para ejecutar la imagen, permitiendo llamadas al puerto en *localhost*:
 
 `docker run -p 8888:8888 calculator-api-challenge`
-
-## To Do
-* Agregar test unitarios.

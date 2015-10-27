@@ -11,6 +11,10 @@ _ALLOWED_OPS = {'+', '-', '*', '/'}
 _DEBUG = True
 
 
+class Error(Exception):
+    """Exception raised when input data is wrong for the calculator."""
+
+
 class CalculatorHandler(tornado.web.RequestHandler):
     """Main handler for this application."""
     def get(self):
@@ -37,6 +41,22 @@ class CalculatorHandler(tornado.web.RequestHandler):
         self.write({'result': result})
 
     @staticmethod
+    def prepare_ops(ops):
+        """Convert all input operands into float numbers.
+        @param ops: list of values to apply operation
+        """
+        return [float(one_op) for one_op in ops]
+
+    @staticmethod
+    def check_inputs(oop, ops):
+        """Check operation is valid and it has at least one operand.
+        @param oop: string with valid operation
+        @param ops: list of values to apply operation
+        """
+        if not oop or not ops or oop not in _ALLOWED_OPS:
+            raise Error('No operation, no operands or invalid operation')
+
+    @staticmethod
     def apply_op(oop, ops):
         """Get value of calculation.
         @param oop: string with valid operation
@@ -58,27 +78,19 @@ class CalculatorHandler(tornado.web.RequestHandler):
         """Get query from URL request."""
         query_str = self.get_body_argument('query', '')
         if not query_str:
-            return None
-        try:
-            return json.loads(query_str)
-        except ValueError:
-            return None
+            raise Error('No query in request')
+        return json.loads(query_str)
 
     def post(self):
         """Returns a hello world string."""
-        query = self._get_query()
-        if not query:
-            self._error('No query or invalid query in request')
-            return
-        oop = query.get('op', '')
-        ops = query.get('ops', [])
-        if not oop or not ops or oop not in _ALLOWED_OPS:
-            self._error('No operation, no operands or invalid operation')
-            return
         try:
-            value = CalculatorHandler.apply_op(
-                oop, [float(one_op) for one_op in ops])
-        except (ValueError, ZeroDivisionError) as exc:
+            query = self._get_query()
+            oop = query.get('op', '')
+            ops = query.get('ops', [])
+            CalculatorHandler.check_inputs(oop, ops)
+            ops = CalculatorHandler.prepare_ops(ops)
+            value = CalculatorHandler.apply_op(oop, ops)
+        except (Error, ValueError, ZeroDivisionError) as exc:
             self._error(str(exc))
             return
         self._end(str(value))
